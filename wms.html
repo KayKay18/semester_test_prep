@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<!-- Default Settings -->
+<head> 
+	<title>Simple Leaflet Map</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+	 crossorigin="" />
+	<!-- Make sure you put this AFTER Leaflet's CSS -->
+	<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+	 crossorigin="">
+	</script>
+</head>
+
+<body>
+  <!-- Define container -->
+	<div id="mapid" style="width: 1300px; height: 700px"></div>
+
+	<script> 
+  //should actually add to script file
+    // Create map var
+		var map = L.map('mapid').setView([-31, 25],5.5);
+
+        //your workspace in geoserver
+        hs_url = 'http://geodev.co.za:8080/geoserver/kayla/wms';
+
+        //keep all URL's together at the top
+        osm_URL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        watercolor_URL = 'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.png';
+        dark_URL = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+
+        //can add any mapLink
+        mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        
+        //add your basemap
+        L.tileLayer(
+            dark_URL, {
+            attribution: '&copy; ' + mapLink + ' Contributors'
+        }).addTo(map);
+
+        var provinces = L.tileLayer.wms(
+          hs_url,
+          {
+            layers: 'kayla:provinces',
+            format: 'image/png',
+            transparent: true
+          }
+        );
+        provinces.addTo(map);
+
+        var healthsites = L.tileLayer.wms(
+          hs_url,
+          {
+            layers: 'kayla:sa_healthsites',
+            format: 'image/png',
+            transparent: true
+          }
+        );
+        healthsites.addTo(map);
+        
+	</script>
+</body>
+
+</html>
