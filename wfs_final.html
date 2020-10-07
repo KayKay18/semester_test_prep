@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Kayla Theron Web Map Service</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""/>
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+   <div id="map" style="width: 1250px; height: 650px"></div>
+
+    <script>
+      var map = L.map('map').setView([-25.754544, 28.231482], 14);
+      layers: [openstreetmap,dark,sattellites];
+
+      var osm_URL = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      var watercolor_URL = 'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.png';
+      var dark_URL = 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+      var sat_URL = 'http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}';
+
+      var mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+
+      var hs_url = 'http://geodev.co.za:8080/geoserver/kayla/ows';
+
+      var openstreetmap = L.tileLayer(osm_URL, {id: 'MapID', tileSize: 512, zoomOffset: -1})
+      var watercolor = L.tileLayer(watercolor_URL, {id: 'MapID', titleSize: 512, zoomOffset: -1})
+      var dark = L.tileLayer(dark_URL, {id: 'MapID', titleSize: 512, zoomOffset: -1})
+      var sattellites = L.tileLayer(sat_URL,{ maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] })
+
+      //function getColor(d) {
+        //return d > 200000000 ? '#800026' :
+               //d > 100000000  ? '#BD0026' :
+               //d > 50000000  ? '#E31A1C' :
+               //d > 10000000  ? '#FC4E2A' :
+               //d > 1000000   ? '#FD8D3C' :
+               //d > 100000   ? '#FEB24C' :
+               //d > 10000   ? '#FED976' :
+                            //'#FFEDA0';
+        //}
+
+        L.tileLayer(
+            dark_URL, {
+            attribution: '&copy; ' + mapLink + ' Contributors',
+            maxZoom: 50,
+          }).addTo(map);
+
+        var defaultParameters = {
+            service : 'WFS',
+            version : '1.0.0',
+            request : 'GetFeature',
+            typeName : 'kayla:sa_healthsites',
+            outputFormat : 'text/javascript',
+            format_options : 'callback:getJson',
+            SrsName : 'EPSG:4326'
+        };
+
+        var parameters = L.Util.extend(defaultParameters);
+        var URL = hs_url + L.Util.getParamString(parameters);
+
+        //point style
+        var geojsonMarkerOptions = {
+            radius: 5,
+            fillColor: "ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        var WFSLayer = null;
+        var ajax = $.ajax({
+            url : URL,
+            dataType : 'jsonp',
+            jsonpCallback : 'getJson',
+            success : function (response) {
+                WFSLayer = L.geoJson(response, {
+                    pointToLayer: function (feature, latlng) 
+                    { 
+                        return L.circleMarker(latlng, geojsonMarkerOptions); 
+                    },
+                    onEachFeature: function (feature, layer) {
+                        popupOptions = {maxWidth: 200};
+                        layer.bindPopup("Healthsite type: " + feature.properties.amenity
+                            ,popupOptions);
+                    }
+                }).addTo(map);
+
+                L.control.layers({"OpenStreetMap": openstreetmap, "Dark": dark, "Satellite": sattellites}, {"Healthsites": WFSLayer}).addTo(map);
+            }
+        });
+    </script>
+</body>
+</html>
